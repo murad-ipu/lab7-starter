@@ -1,1 +1,12 @@
-[]
+[
+  {"query": "岩手の静かなお寺", "expected": "Chuson-ji"},
+  {"query": "golden hall temple in Iwate", "expected": "Chuson-ji"},
+  {"query": "temple with 1,015 stone steps and a valley viewpoint", "expected": "Yamadera"},
+  {"query": "雪景色がきれいな温泉街", "expected": "Ginzan Onsen"},
+  {"query": "thatched roof farmhouses village", "expected": "Shirakawa-go"},
+  {"query": "torii gate standing in the sea", "expected": "Itsukushima Shrine"},
+  {"query": "奈良の大仏と鹿", "expected": "Todai-ji"},
+  {"query": "white castle near Kobe", "expected": "Himeji Castle"},
+  {"query": "京都で一番有名な神社", "expected": "Fushimi Inari Taisha"},
+  {"query": "carving of a sleeping cat", "expected": "Nikko Toshogu"}
+]
