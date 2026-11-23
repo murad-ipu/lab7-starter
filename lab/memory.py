@@ -84,7 +84,26 @@ def set_preference(user_id: str, scope: str, key: str, value: str, evidence: str
     - Always use "?" placeholders, never f-strings, in SQL.
     """
     # --- STUDENT IMPLEMENTATION START ---
-    raise NotImplementedError("TODO: implement this block")
+
+    user_id = _require(user_id, "user_id")
+    scope = _require(scope, "scope")
+    key = _require(key, "key")
+    value = _require(value, "value")
+
+    path = init_db(db_path)
+    with closing(sqlite3.connect(path)) as conn, conn:
+        conn.execute(
+            """
+            INSERT INTO preferences (user_id, scope, key, value, evidence, updated_at)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(user_id, scope, key) DO UPDATE SET
+                value = excluded.value,
+                evidence = excluded.evidence,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (user_id, scope, key, value, evidence or ""),
+        )
+
     # --- STUDENT IMPLEMENTATION END ---
 
 
@@ -94,7 +113,20 @@ def forget_preference(user_id: str, scope: str, key: str, db_path: Optional[str]
     Other keys, scopes and users must not be affected.
     """
     # --- STUDENT IMPLEMENTATION START ---
-    raise NotImplementedError("TODO: implement this block")
+
+    user_id = _require(user_id, "user_id")
+    scope = _require(scope, "scope")
+    key = _require(key, "key")
+
+    path = init_db(db_path)
+    with closing(sqlite3.connect(path)) as conn, conn:
+        cur = conn.execute(
+            "DELETE FROM preferences WHERE user_id = ? AND scope = ? AND key = ?",
+            (user_id, scope, key),
+        )
+        return cur.rowcount > 0
+
+
     # --- STUDENT IMPLEMENTATION END ---
 
 
