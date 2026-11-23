@@ -21,7 +21,46 @@ def compute_budget_summary(items: List[Dict[str, Any]], budget_limit_yen: int) -
     - has_estimates, item_count, items (name, cost_yen, is_estimate for each item)
     """
     # --- STUDENT IMPLEMENTATION START ---
-    raise NotImplementedError("TODO: implement this block")
+
+    if isinstance(budget_limit_yen, bool) or not isinstance(budget_limit_yen, int) or budget_limit_yen < 0:
+        raise ValueError("budget_limit_yen must be a non-negative integer.")
+
+    known_total = 0
+    estimated_total = 0
+    clean_items = []
+    for i, item in enumerate(items or []):
+        if not isinstance(item, dict):
+            raise ValueError(f"Item {i} must be an object.")
+        cost = item.get("cost_yen")
+        # bool is a subclass of int, so reject it explicitly
+        if isinstance(cost, bool) or not isinstance(cost, (int, float)):
+            raise ValueError(f"Item {i}: cost_yen must be a number.")
+        if isinstance(cost, float) and not cost.is_integer():
+            raise ValueError(f"Item {i}: cost_yen must be a whole number of yen.")
+        cost = int(cost)
+        if cost < 0:
+            raise ValueError(f"Item {i}: cost_yen cannot be negative.")
+
+        is_estimate = bool(item.get("is_estimate", False))
+        if is_estimate:
+            estimated_total += cost
+        else:
+            known_total += cost
+        clean_items.append({"name": str(item.get("name", "")), "cost_yen": cost, "is_estimate": is_estimate})
+
+    projected_total = known_total + estimated_total
+    return {
+        "known_total_yen": known_total,
+        "estimated_total_yen": estimated_total,
+        "projected_total_yen": projected_total,
+        "budget_limit_yen": budget_limit_yen,
+        "remaining_yen": budget_limit_yen - projected_total,
+        "is_within_budget": projected_total <= budget_limit_yen,
+        "has_estimates": any(it["is_estimate"] for it in clean_items),
+        "item_count": len(clean_items),
+        "items": clean_items,
+    }
+
     # --- STUDENT IMPLEMENTATION END ---
 
 
