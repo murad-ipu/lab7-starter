@@ -86,5 +86,42 @@ def run_bounded_review(drafts: List[str], max_rounds: int = 3,
       history = [{"round": n, "approved": bool}, ...]
     """
     # --- STUDENT IMPLEMENTATION START ---
-    raise NotImplementedError("TODO: implement this block")
+
+    if isinstance(max_rounds, bool) or not isinstance(max_rounds, int) or max_rounds < 1:
+        raise ValueError("max_rounds must be an integer >= 1.")
+
+    drafts = list(drafts or [])
+    if review_fn is None:
+        last_round = len(drafts)
+        review_fn = lambda _draft, rnd: rnd == last_round  # only the last draft is approved
+
+    history = []
+    final_draft = ""
+    rounds_executed = 0
+    for rnd in range(1, min(max_rounds, len(drafts)) + 1):  # hard ceiling
+        draft = drafts[rnd - 1]
+        approved = bool(review_fn(draft, rnd))
+        rounds_executed = rnd
+        final_draft = draft
+        history.append({"round": rnd, "approved": approved})
+        if approved:
+            return {
+                "status": "completed",
+                "rounds_executed": rounds_executed,
+                "max_rounds": max_rounds,
+                "final_draft": final_draft,
+                "history": history,
+            }
+
+    reason = ("No drafts were provided." if not drafts
+              else f"No draft was approved within {rounds_executed} round(s) (limit {max_rounds}).")
+    return {
+        "status": "needs_attention",
+        "rounds_executed": rounds_executed,
+        "max_rounds": max_rounds,
+        "final_draft": final_draft,
+        "history": history,
+        "reason": reason,
+    }
+
     # --- STUDENT IMPLEMENTATION END ---
