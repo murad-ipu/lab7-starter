@@ -148,7 +148,18 @@ def tokenize(text: str) -> set:
       a single character is kept as is.
     """
     # --- STUDENT IMPLEMENTATION START ---
-    raise NotImplementedError("TODO: implement this block")
+
+    tokens = set()
+    for run in _TOKEN_RE.findall((text or "").lower()):
+        if re.match(rf"[{_CJK}]", run):           # Japanese / Chinese run
+            if len(run) == 1:
+                tokens.add(run)
+            else:
+                tokens.update(run[i:i + 2] for i in range(len(run) - 1))  # bigrams
+        elif len(run) > 1 and run not in STOPWORDS:  # Latin word
+            tokens.add(run)
+    return tokens
+
     # --- STUDENT IMPLEMENTATION END ---
 
 
@@ -161,7 +172,22 @@ def simple_keyword_rag(query: str, documents: List[str], top_k: int = 2) -> List
     - Return at most top_k documents ([] if top_k < 1 or the query has no tokens).
     """
     # --- STUDENT IMPLEMENTATION START ---
-    raise NotImplementedError("TODO: implement this block")
+
+    if top_k < 1:
+        return []
+    query_tokens = tokenize(query)
+    if not query_tokens:
+        return []
+
+    scored = []
+    for index, doc in enumerate(documents):
+        score = len(query_tokens & tokenize(doc))  # distinct shared tokens only
+        if score > 0:
+            scored.append((score, index, doc))
+
+    scored.sort(key=lambda t: (-t[0], t[1]))  # highest score first, ties keep original order
+    return [doc for _, _, doc in scored[:top_k]]
+
     # --- STUDENT IMPLEMENTATION END ---
 
 
