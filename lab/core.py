@@ -58,7 +58,20 @@ def fetch_weather(city_name: str) -> Dict[str, Any]:
     # 3. No results               -> return {"found": False, "error": f"City '{clean_city}' not found."}
     # 4. Missing latitude/longitude -> return {"found": False, "error": ...}
     # --- STUDENT IMPLEMENTATION START ---
-    raise NotImplementedError("TODO: implement this block")
+    geo_url = "https://geocoding-api.open-meteo.com/v1/search?" + urllib.parse.urlencode(
+        {"name": clean_city, "count": 1, "language": "en", "format": "json"})
+    try:
+        geo = _get_json(geo_url)
+    except Exception as exc:
+        return {"found": False, "error": f"Geocoding request failed: {exc}"}
+
+    results = geo.get("results") if isinstance(geo, dict) else None
+    if not results:
+        return {"found": False, "error": f"City '{clean_city}' not found."}
+    place = results[0]
+    lat, lon = place.get("latitude"), place.get("longitude")
+    if lat is None or lon is None:
+        return {"found": False, "error": f"Geocoding result for '{clean_city}' has no coordinates."}
     # --- STUDENT IMPLEMENTATION END ---
 
     # TODO [Task 1.2]: Fetch current conditions from https://api.open-meteo.com/v1/forecast
@@ -67,6 +80,35 @@ def fetch_weather(city_name: str) -> Dict[str, Any]:
     # 2. Network error, or no "temperature_2m" in "current" -> return {"found": False, "error": ...}
     # 3. Return: found, city, country, latitude, longitude, observed_at, temperature_c,
     #    humidity_pct, weather_code, conditions (use describe_weather_code), attribution (ATTRIBUTION)
+
     # --- STUDENT IMPLEMENTATION START ---
-    raise NotImplementedError("TODO: implement this block")
+    wx_url = "https://api.open-meteo.com/v1/forecast?" + urllib.parse.urlencode({
+        "latitude": lat,
+        "longitude": lon,
+        "current": "temperature_2m,relative_humidity_2m,weather_code",
+        "timezone": "auto",
+    })
+    try:
+        wx = _get_json(wx_url)
+    except Exception as exc:
+        return {"found": False, "error": f"Weather request failed: {exc}"}
+
+    current = wx.get("current") if isinstance(wx, dict) else None
+    if not isinstance(current, dict) or "temperature_2m" not in current:
+        return {"found": False, "error": "Weather response is missing current temperature."}
+
+    code = current.get("weather_code")
+    return {
+        "found": True,
+        "city": place.get("name", clean_city),
+        "country": place.get("country", ""),
+        "latitude": lat,
+        "longitude": lon,
+        "observed_at": current.get("time"),
+        "temperature_c": current.get("temperature_2m"),
+        "humidity_pct": current.get("relative_humidity_2m"),
+        "weather_code": code,
+        "conditions": describe_weather_code(code),
+        "attribution": ATTRIBUTION,
+    }
     # --- STUDENT IMPLEMENTATION END ---
