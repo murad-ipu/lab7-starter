@@ -68,5 +68,37 @@ def cancel_order(order_id: str, confirmed: bool = False) -> Dict[str, Any]:
     Every result includes "success", "message" and (for known orders) "status".
     """
     # --- STUDENT IMPLEMENTATION START ---
-    raise NotImplementedError("TODO: implement this block")
+
+    oid = normalize_order_id(order_id)
+    order = ORDERS_DB.get(oid)
+
+    # Rule 1: unknown order
+    if order is None:
+        return {"success": False, "order_id": oid,
+                "message": f"Order '{order_id}' was not found in the records."}
+
+    status = order.get("status")
+    # Rule 2: shipped orders cannot be cancelled
+    if status == "shipped":
+        return {"success": False, "order_id": oid, "status": status,
+                "message": f"Order {oid} has already shipped and cannot be cancelled. Please request a return instead."}
+    # Rule 3: already cancelled
+    if status == "cancelled":
+        return {"success": False, "order_id": oid, "status": status,
+                "message": f"Order {oid} is already cancelled."}
+    # Rule 4: any other status that is not cancellable
+    if status not in CANCELLABLE_STATUSES:
+        return {"success": False, "order_id": oid, "status": status,
+                "message": f"Order {oid} has status '{status}' and cannot be cancelled."}
+    # Rule 5: HITL gate - only the real boolean True counts
+    if confirmed is not True:
+        return {"success": False, "order_id": oid, "status": status,
+                "message": f"User confirmation required before cancelling order {oid}. "
+                           "This action is irreversible."}
+
+    # Rule 6: cancel
+    order["status"] = "cancelled"
+    return {"success": True, "order_id": oid, "status": "cancelled",
+            "message": f"Order {oid} has been cancelled."}
+
     # --- STUDENT IMPLEMENTATION END ---
